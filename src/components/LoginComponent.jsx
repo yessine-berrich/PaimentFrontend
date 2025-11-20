@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { login } from "../api/service";
-
+import './LoginComponent.css';
 function LoginComponent({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,44 +46,50 @@ function LoginComponent({ onLoginSuccess }) {
 
 
   return (
-    <div className="login-container">
-      <h2>Connexion 🔑</h2>
-      <form onSubmit={handleSubmit}>
-        {error && <p style={{ color: 'red', fontWeight: 'bold' }}>{error}</p>}
+    <div className="login-page">
+            <div className="login-container">
+                <h2>Connexion 🔑</h2>
+                <form onSubmit={handleSubmit} className="login-form">
+                    
+                    {error && <p className="error-message">{error}</p>}
 
-        <div>
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={loading}
-          />
+                    <div>
+                        <label htmlFor="email">Email:</label>
+                        <input
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="password">Mot de passe:</label>
+                        <input
+                            type="password"
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            disabled={loading}
+                        />
+                    </div>
+
+                    
+                    <button type="submit" disabled={loading} className="login-button">
+                        {loading ? "Connexion en cours..." : "Se connecter"}
+                    </button>
+                    {/* ❌ LIEN DECONNEXION SUPPRIMÉ ICI pour éviter le doublon visible sur l'image */}
+                </form>
+                {/* Ajout d'un message pour le lien d'inscription, mais sans lien actif.
+                  L'inscription est gérée par le composant App.js
+                */}
+                <p>Pas encore de compte ? S'inscrire</p>
+                
+            </div>
         </div>
-
-        <div>
-          <label htmlFor="password">Mot de passe:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={loading}
-          />
-        </div>
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Connexion en cours..." : "Se connecter"}
-        </button>
-      </form>
-      {/* Vous pouvez ajouter ici un lien vers l'inscription */}
-      <p style={{ marginTop: "15px" }}>
-        Pas encore de compte ? <a href="/register">S'inscrire</a>
-      </p>
-    </div>
   );
 }
 

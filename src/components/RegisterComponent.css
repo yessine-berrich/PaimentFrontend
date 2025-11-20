@@ -1,0 +1,160 @@
+/* ======================================= */
+/* Conteneur et mise en page générale */
+/* ======================================= */
+
+/* Utilise les mêmes styles de page que LoginComponent (thème sombre) */
+.register-page {
+    /* Garde le conteneur centré verticalement et horizontalement */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background-color: #1a1a1a;
+}
+
+.register-container {
+    width: 100%;
+    width: 500px; /* Plus large que la connexion pour contenir plus de champs */
+    padding: 40px;
+    background-color: #242424;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid #3A3A3A;
+    text-align: center;
+}
+
+.register-container h2 {
+    color: #ffffff;
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-size: 2em;
+}
+
+/* ======================================= */
+/* Formulaire et champs de saisie */
+/* ======================================= */
+
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Augmenter l'espacement entre les champs pour la clarté */
+}
+
+/* Style uniforme pour tous les inputs et selects */
+.register-form input,
+.register-form select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #444444;
+    border-radius: 6px;
+    background-color: #333333;
+    color: #E0E0E0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.register-form input:focus,
+.register-form select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* Style pour le libellé du sélecteur de rôle */
+.register-form label {
+    display: block;
+    text-align: left;
+    margin-top: 5px;
+    margin-bottom: -5px; /* Remonter légèrement le label au-dessus du select */
+    color: #CCCCCC;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+/* ======================================= */
+/* Boutons et Messages */
+/* ======================================= */
+
+.register-button {
+    padding: 12px;
+    background-color: #28a745; /* Vert pour l'action de création/inscription */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 15px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.register-button:hover:not(:disabled) {
+    background-color: #1e7e34;
+}
+
+.register-button:disabled {
+    background-color: #6c757d;
+    cursor: wait;
+    opacity: 0.7;
+}
+
+/* Message d'erreur */
+.error-message {
+    color: #dc3545;
+    background-color: #301f1f;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Message de succès (lorsque le formulaire est réussi) */
+.success-container {
+    padding: 30px;
+    background-color: #1e3c23; /* Vert très foncé */
+    border: 1px solid #28a745;
+    border-radius: 8px;
+    color: #c3e6cb;
+    text-align: center;
+}
+.success-container h2 {
+    color: #ffffff;
+    font-size: 1.5em;
+}
+.success-container p {
+    margin-top: 15px;
+    color: #e2f0d9;
+}
+
+/* Lien de basculement vers la connexion */
+.register-container p {
+    color: #AAAAAA;
+    font-size: 0.9em;
+    margin-top: 20px;
+}
+
+.register-container a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
+.register-container a:hover {
+    color: #5bc0de;
+    text-decoration: underline;
+}
+
+/* ======================================= */
+/* Responsive Design pour petits écrans */
+/* ======================================= */
+@media (max-width: 600px) {
+    .register-container {
+        max-width: 90%;
+        padding: 25px;
+    }
+    .register-container h2 {
+        font-size: 1.5em;
+    }
+}

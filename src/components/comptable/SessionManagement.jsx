@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import './SessionManagement.css'; // <-- Utilisation d'un fichier CSS pour le style
 import { 
     getUsersByRole, 
     createSession, 
@@ -24,13 +25,8 @@ function SessionManagement() {
     const [coordinators, setCoordinators] = useState([]);
     const [sessions, setSessions] = useState([]);
     
-    // État du formulaire actuel
     const [formData, setFormData] = useState(initialSessionData); 
-    
-    // ID de la session en cours d'édition (null si c'est une création)
     const [editingId, setEditingId] = useState(null); 
-    
-    // Contrôle du dialogue modal
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [loading, setLoading] = useState(true);
@@ -56,14 +52,14 @@ function SessionManagement() {
         try {
             const data = await getUsersByRole('COORDINATEUR', token);
             setCoordinators(data);
-            if (data.length > 0) {
-                // Sélectionner le premier coordinateur par défaut
+            if (data.length > 0 && formData.id_coordinateur === '') {
+                // S'assurer qu'un coordinateur est sélectionné par défaut à l'initialisation
                 setFormData(prev => ({ ...prev, id_coordinateur: data[0].id.toString() }));
             }
         } catch (err) {
             setError("Impossible de charger la liste des Coordinateurs.");
         }
-    }, [token]);
+    }, [token, formData.id_coordinateur]);
 
 
     useEffect(() => {
@@ -84,6 +80,7 @@ function SessionManagement() {
 
     const handleOpenModal = (session = null) => {
         if (session) {
+            // Stocker l'ID de la session à éditer (qui peut être un nombre ou une chaîne)
             setEditingId(session.id);
             // Charger les données de la session sélectionnée dans le formulaire
             setFormData({
@@ -94,6 +91,7 @@ function SessionManagement() {
                 semestre: session.semestre || 'S5',
                 date_debut: session.date_debut ? session.date_debut.split('T')[0] : '', 
                 date_fin: session.date_fin ? session.date_fin.split('T')[0] : '',
+                // L'ID du coordinateur doit être une chaîne pour le champ select
                 id_coordinateur: session.id_coordinateur ? session.id_coordinateur.toString() : (coordinators[0]?.id.toString() || ''), 
             });
             setMessage(`Modification de la session ID ${session.id}`);
@@ -113,6 +111,9 @@ function SessionManagement() {
         setIsModalOpen(false);
         setEditingId(null);
         setFormData(initialSessionData);
+        if (coordinators.length > 0) {
+            setFormData(prev => ({ ...prev, id_coordinateur: coordinators[0].id.toString() }));
+        }
         setMessage(null);
         setError(null);
     };
@@ -133,12 +134,12 @@ function SessionManagement() {
         try {
             let dataToSend = {
                 ...formData,
+                // Le coordinateur doit être un nombre
                 id_coordinateur: parseInt(formData.id_coordinateur, 10),
             };
             
-            // Correction critique pour PATCH : Filtrer les champs vides
             if (editingId) {
-                 dataToSend = Object.entries(dataToSend).reduce((acc, [key, value]) => {
+                dataToSend = Object.entries(dataToSend).reduce((acc, [key, value]) => {
                     // N'inclure que les valeurs qui ne sont pas des chaînes vides
                     if (value !== '' && value !== null && value !== undefined) {
                         acc[key] = value;
@@ -146,7 +147,10 @@ function SessionManagement() {
                     return acc;
                 }, {});
                 
-                await updateSession(editingId, dataToSend, token);
+                // CORRECTION: S'assurer que l'ID pour la modification est un nombre
+                const idToUpdate = parseInt(editingId, 10); 
+                
+                await updateSession(idToUpdate, dataToSend, token);
                 setMessage("Session modifiée avec succès !");
             } else {
                 // CRÉATION (POST)
@@ -159,7 +163,6 @@ function SessionManagement() {
 
         } catch (err) {
             const action = editingId ? "modification" : "création";
-            // Afficher le message d'erreur du backend (ex: Validation failed)
             const errorMessage = err.response?.data?.message || `Échec de la ${action} de la session.`;
             setError(errorMessage);
         } finally {
@@ -177,7 +180,10 @@ function SessionManagement() {
         setError(null);
         
         try {
-            await deleteSession(sessionId, token); 
+            // CORRECTION: Convertir sessionId en nombre entier pour l'API
+            const idToDelete = parseInt(sessionId, 10);
+            
+            await deleteSession(idToDelete, token); 
             setMessage(`Session "${promotion}" supprimée avec succès.`);
             await fetchSessions(); 
         } catch (err) {
@@ -196,60 +202,86 @@ function SessionManagement() {
     }
 
     return (
-        <div className="view-content" style={styles.container}>
+        <div className="session-container">
             <h2>Gestion des Sessions 📅</h2>
             
-            {message && <p style={styles.successMessage}>✅ {message}</p>}
-            {error && <p style={styles.errorMessage}>🛑 {error}</p>}
+            {/* Messages de feedback au niveau principal */}
+            {message && <p className="feedback-message success-message">✅ {message}</p>}
+            {error && !isModalOpen && <p className="feedback-message error-message">🛑 {error}</p>}
             
-            <button onClick={() => handleOpenModal()} style={{...styles.submitButton, backgroundColor: '#007bff'}}>
+            <button 
+                onClick={() => handleOpenModal()} 
+                className="main-action-button create-button"
+            >
                 + Créer une nouvelle session
             </button>
 
-            <hr style={{margin: '30px 0'}} />
+            <hr className="separator" />
 
             {/* --- Dialogue Modal pour Création/Modification --- */}
             {isModalOpen && (
-                <div style={styles.modalOverlay}>
-                    <div style={styles.modalContent}>
+                <div className="modal-overlay">
+                    <div className="modal-content">
                         <h3>{editingId ? `Modification de l'ID ${editingId}` : 'Créer une nouvelle session'}</h3>
-                        {/* Afficher l'erreur dans le modal si elle existe */}
-                        {error && <p style={{color: 'red', fontWeight: 'bold'}}>{error}</p>}
+                        
+                        {/* Afficher l'erreur DANS le modal si elle existe */}
+                        {error && <p className="feedback-message error-message">{error}</p>}
 
-                        <form onSubmit={handleSubmit} style={styles.form}>
+                        <form onSubmit={handleSubmit} className="modal-form">
                             
                             {/* Ligne 1: Promotion, Classe */}
-                            <div style={styles.formRow}>
-                                <input name="promotion" type="text" placeholder="Promotion" value={formData.promotion} onChange={handleChange} required style={styles.input} />
-                                <input name="classe" type="text" placeholder="Classe" value={formData.classe} onChange={handleChange} required style={styles.input} />
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="promotion">Promotion</label>
+                                    <input id="promotion" name="promotion" type="text" placeholder="Ex: P2024" value={formData.promotion} onChange={handleChange} required />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="classe">Classe</label>
+                                    <input id="classe" name="classe" type="text" placeholder="Ex: L3-A" value={formData.classe} onChange={handleChange} required />
+                                </div>
                             </div>
 
                             {/* Ligne 2: Spécialité, Niveau, Semestre */}
-                            <div style={styles.formRow}>
-                                <input name="specialite" type="text" placeholder="Spécialité" value={formData.specialite} onChange={handleChange} required style={styles.input} />
-                                <select name="niveau" value={formData.niveau} onChange={handleChange} required style={styles.input}>
-                                    <option value="Licence">Licence</option>
-                                    <option value="Master">Master</option>
-                                </select>
-                                <select name="semestre" value={formData.semestre} onChange={handleChange} required style={styles.input}>
-                                    <option value="S1">S1</option>
-                                    <option value="S2">S2</option>
-                                    <option value="S3">S3</option>
-                                    <option value="S4">S4</option>
-                                    <option value="S5">S5</option>
-                                    <option value="S6">S6</option>
-                                </select>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="specialite">Spécialité</label>
+                                    <input id="specialite" name="specialite" type="text" placeholder="Ex: Informatique" value={formData.specialite} onChange={handleChange} required />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="niveau">Niveau</label>
+                                    <select id="niveau" name="niveau" value={formData.niveau} onChange={handleChange} required>
+                                        <option value="Licence">Licence</option>
+                                        <option value="Master">Master</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="semestre">Semestre</label>
+                                    <select id="semestre" name="semestre" value={formData.semestre} onChange={handleChange} required>
+                                        <option value="S1">S1</option>
+                                        <option value="S2">S2</option>
+                                        <option value="S3">S3</option>
+                                        <option value="S4">S4</option>
+                                        <option value="S5">S5</option>
+                                        <option value="S6">S6</option>
+                                    </select>
+                                </div>
                             </div>
 
                             {/* Ligne 3: Dates */}
-                            <div style={styles.formRow}>
-                                <label style={styles.label}>Début: <input name="date_debut" type="date" value={formData.date_debut} onChange={handleChange} required style={styles.input} /></label>
-                                <label style={styles.label}>Fin: <input name="date_fin" type="date" value={formData.date_fin} onChange={handleChange} required style={styles.input} /></label>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="date_debut">Date de Début</label>
+                                    <input id="date_debut" name="date_debut" type="date" value={formData.date_debut} onChange={handleChange} required />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="date_fin">Date de Fin</label>
+                                    <input id="date_fin" name="date_fin" type="date" value={formData.date_fin} onChange={handleChange} required />
+                                </div>
                             </div>
 
                             {/* Ligne 4: Coordinateur */}
-                            <div style={styles.group}>
-                                <label htmlFor="id_coordinateur" style={{fontWeight: 'bold'}}>Coordinateur Responsable:</label>
+                            <div className="form-group">
+                                <label htmlFor="id_coordinateur">Coordinateur Responsable:</label>
                                 <select 
                                     id="id_coordinateur"
                                     name="id_coordinateur" 
@@ -257,7 +289,7 @@ function SessionManagement() {
                                     onChange={handleChange} 
                                     required 
                                     disabled={coordinators.length === 0}
-                                    style={styles.input}
+                                    className="full-width-select"
                                 >
                                     {coordinators.length > 0 ? (
                                         coordinators.map(c => (
@@ -271,11 +303,16 @@ function SessionManagement() {
                                 </select>
                             </div>
 
-                            <div style={styles.modalButtons}>
-                                <button type="button" onClick={handleCloseModal} style={styles.cancelButton}>
+                            <div className="modal-buttons">
+                                <button type="button" onClick={handleCloseModal} className="cancel-button">
                                     Annuler
                                 </button>
-                                <button type="submit" disabled={loading || coordinators.length === 0} style={styles.submitButton}>
+                                <button 
+                                    type="submit" 
+                                    disabled={loading || coordinators.length === 0} 
+                                    className="main-action-button" 
+                                    style={{backgroundColor: editingId ? '#007bff' : '#28a745'}}
+                                >
                                     {editingId ? (loading ? "Sauvegarde en cours..." : "Sauvegarder") : (loading ? "Création en cours..." : "Créer la session")}
                                 </button>
                             </div>
@@ -288,36 +325,38 @@ function SessionManagement() {
             <h3>Sessions existantes ({sessions.length})</h3>
             
             {sessions.length > 0 ? (
-                <table style={styles.table}>
+                <table className="session-table">
                     <thead>
                         <tr>
-                            <th style={styles.th}>ID</th>
-                            <th style={styles.th}>Promotion</th>
-                            <th style={styles.th}>Classe/Spécialité</th>
-                            <th style={styles.th}>Période</th>
-                            <th style={styles.th}>Coordinateur ID</th>
-                            <th style={styles.th}>Actions</th>
+                            <th className="th">ID</th>
+                            <th className="th">Promotion</th>
+                            <th className="th">Classe/Spécialité</th>
+                            <th className="th">Niveau/Semestre</th>
+                            <th className="th">Période</th>
+                            <th className="th">Coordinateur ID</th>
+                            <th className="th">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {sessions.map(s => (
                             <tr key={s.id}>
-                                <td style={styles.td}>{s.id}</td>
-                                <td style={styles.td}>{s.promotion}</td>
-                                <td style={styles.td}>{s.classe} ({s.specialite})</td>
-                                <td style={styles.td}>{s.date_debut.split('T')[0]} au {s.date_fin.split('T')[0]}</td>
-                                <td style={styles.td}>{s.id_coordinateur}</td>
-                                <td style={styles.td}>
+                                <td>{s.id}</td>
+                                <td>{s.promotion}</td>
+                                <td>{s.classe} ({s.specialite})</td>
+                                <td>{s.niveau} ({s.semestre})</td>
+                                <td>{s.date_debut.split('T')[0]} au {s.date_fin.split('T')[0]}</td>
+                                <td>{s.id_coordinateur}</td>
+                                <td className="table-action-buttons">
                                     <button 
                                         onClick={() => handleOpenModal(s)}
-                                        style={styles.editButton}
+                                        className="edit-button"
                                         disabled={loading}
                                     >
                                         Modifier
                                     </button>
                                     <button 
                                         onClick={() => handleRemove(s.id, s.promotion)}
-                                        style={styles.deleteButton}
+                                        className="delete-button"
                                         disabled={loading}
                                     >
                                         Supprimer
@@ -328,43 +367,10 @@ function SessionManagement() {
                     </tbody>
                 </table>
             ) : (
-                <p>Aucune session trouvée.</p>
+                <p className="no-data-message">Aucune session trouvée.</p>
             )}
         </div>
     );
 }
-
-// Styles
-const styles = {
-    container: { maxWidth: '1000px', margin: '0 auto' },
-    form: { display: 'flex', flexDirection: 'column', gap: '15px' },
-    formRow: { display: 'flex', gap: '15px' },
-    group: { display: 'flex', flexDirection: 'column' },
-    input: { padding: '10px', flex: 1, border: '1px solid #ddd', borderRadius: '4px' },
-    label: { display: 'flex', flexDirection: 'column', flex: 1, fontSize: '0.9em' },
-    submitButton: { padding: '12px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' },
-    successMessage: { color: 'green', fontWeight: 'bold', border: '1px solid green', padding: '10px', borderRadius: '4px', marginBottom: '15px' },
-    errorMessage: { color: 'red', fontWeight: 'bold', border: '1px solid red', padding: '10px', borderRadius: '4px', marginBottom: '15px' },
-    table: { width: '100%', borderCollapse: 'collapse', marginTop: '20px' },
-    th: { backgroundColor: '#007bff', color: 'white', padding: '12px', textAlign: 'left', border: '1px solid #dee2e6' },
-    td: { padding: '8px 12px', border: '1px solid #dee2e6', verticalAlign: 'middle' },
-    editButton: { padding: '5px 8px', backgroundColor: '#ffc107', color: 'black', border: 'none', borderRadius: '3px', cursor: 'pointer', marginRight: '5px', fontSize: '0.8em' },
-    deleteButton: { padding: '5px 8px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.8em' },
-    cancelButton: { padding: '10px 15px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '10px' },
-    
-    // Styles du Modal
-    modalOverlay: {
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', 
-        display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 
-    },
-    modalContent: {
-        backgroundColor: 'white', padding: '30px', borderRadius: '8px', 
-        width: '90%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto'
-    },
-    modalButtons: {
-        display: 'flex', justifyContent: 'flex-end', marginTop: '20px'
-    }
-};
 
 export default SessionManagement;

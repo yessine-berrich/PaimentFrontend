@@ -1,0 +1,92 @@
+/* Assurer que la page complète utilise un fond sombre */
+body {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ======================================= */
+/* Conteneur principal du Dashboard */
+/* ======================================= */
+
+.comptable-dashboard {
+    padding: 20px 40px; /* Ajoute un peu d'espace sur les côtés */
+    min-height: 100vh;
+    background-color: #1a1a1a;
+}
+
+/* ======================================= */
+/* Header du Dashboard */
+/* ======================================= */
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Ligne de séparation douce et sombre */
+    border-bottom: 1px solid #3A3A3A; 
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+    color: #007bff; /* Couleur d'accentuation */
+    font-size: 2em;
+    margin: 0;
+}
+
+.user-welcome-info {
+    color: #CCCCCC;
+    font-weight: 300;
+    margin: 0;
+}
+
+/* ======================================= */
+/* Bouton de Déconnexion */
+/* ======================================= */
+
+.logout-button {
+    padding: 10px 20px;
+    background-color: #dc3545; /* Rouge pour l'action dangereuse/déconnexion */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.logout-button:hover {
+    background-color: #c82333;
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+/* ======================================= */
+/* Responsive Design */
+/* ======================================= */
+
+@media (max-width: 768px) {
+    .comptable-dashboard {
+        padding: 15px 15px;
+    }
+    .dashboard-header {
+        /* Empiler les éléments sur les petits écrans */
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .user-welcome-info {
+        order: 2; /* Met le message de bienvenue en bas */
+        font-size: 0.9em;
+    }
+    .logout-button {
+        order: 3;
+        width: 100%; /* Le bouton prend toute la largeur */
+    }
+    .dashboard-header h1 {
+        order: 1;
+        font-size: 1.5em;
+    }
+}

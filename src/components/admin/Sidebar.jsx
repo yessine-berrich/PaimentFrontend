@@ -1,28 +1,35 @@
 import React from 'react';
+import './Sidebar.css'; // 👈 Importez le fichier CSS ici
 
 function Sidebar({ onViewChange, currentView }) {
     const navItems = [
-        { id: 'all_users', label: '👥 Tous les Utilisateurs' }, // 🚨 NOUVELLE OPTION
+        // Utiliser uniquement le texte, les emojis seront gérés si besoin par le composant appelant
+        { id: 'all_users', label: '👥 Tous les Utilisateurs' }, 
         { id: 'pending', label: '⏳ Utilisateurs en attente' },
         { id: 'active', label: '✅ Utilisateurs actifs' },
         { id: 'profile', label: '👤 Mon Profil' },
     ];
 
     return (
-        <div className="sidebar" style={styles.sidebar}>
+        // Remplacement de style={styles.sidebar} par className="sidebar"
+        <div className="sidebar">
             <h3>Administration</h3>
-            <ul style={styles.navList}>
+            {/* Remplacement de style={styles.navList} par className="nav-list" */}
+            <ul className="nav-list">
                 {navItems.map((item) => (
-                    <li key={item.id} style={styles.navItem}>
+                    // Remplacement de style={styles.navItem} par className="nav-item"
+                    <li key={item.id} className="nav-item">
                         <a 
                             href="#" 
-                            onClick={() => onViewChange(item.id)}
-                            style={{
-                                ...styles.navLink,
-                                backgroundColor: currentView === item.id ? '#007bff' : 'transparent',
-                                color: currentView === item.id ? 'white' : '#333',
+                            onClick={(e) => {
+                                e.preventDefault(); // Empêcher le rechargement de la page
+                                onViewChange(item.id);
                             }}
+                            // Application des classes : nav-link et la classe 'active' si c'est la vue courante
+                            className={`nav-link ${currentView === item.id ? 'active' : ''}`}
+                            // Suppression des styles inline conditionnels
                         >
+                            {/* Le label inclut déjà les emojis */}
                             {item.label}
                         </a>
                     </li>
@@ -32,31 +39,6 @@ function Sidebar({ onViewChange, currentView }) {
     );
 }
 
-// Styles basiques pour un affichage rapide
-const styles = {
-    sidebar: {
-        width: '250px',
-        backgroundColor: '#f8f9fa',
-        padding: '20px',
-        height: '100vh',
-        boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
-        position: 'fixed',
-    },
-    navList: {
-        listStyle: 'none',
-        padding: 0,
-        marginTop: '20px',
-    },
-    navItem: {
-        marginBottom: '10px',
-    },
-    navLink: {
-        textDecoration: 'none',
-        padding: '10px',
-        display: 'block',
-        borderRadius: '5px',
-        transition: 'background-color 0.2s',
-    }
-};
+// ⚠️ Suppression de la constante 'styles' car elle est maintenant dans le fichier CSS
 
 export default Sidebar;

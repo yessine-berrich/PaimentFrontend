@@ -5,6 +5,8 @@ import PendingUsers from './PendingUsers';
 import ActiveUsers from './ActiveUsers'; 
 import Profile from './Profile'; 
 import AllUsers from './AllUsers';
+// 👈 N'oubliez pas l'import CSS
+import './AdminDashboard.css'; 
 
 function AdminDashboard({ user, onLogout }) {
     // État pour simuler le routage de l'interface admin
@@ -13,7 +15,6 @@ function AdminDashboard({ user, onLogout }) {
     const renderView = () => {
         switch (currentView) {
             case 'all_users':
-                // Passer l'utilisateur courant pour gérer les permissions et l'auto-suppression
                 return <AllUsers adminUser={user} />;
             case 'pending':
                 return <PendingUsers />;
@@ -27,49 +28,30 @@ function AdminDashboard({ user, onLogout }) {
     };
 
     return (
-        <div style={styles.dashboardContainer}>
+        // Remplacement de style={styles.dashboardContainer} par className="dashboard-container"
+        <div className="dashboard-container">
             <Sidebar onViewChange={setCurrentView} currentView={currentView} />
             
-            <div style={styles.mainContent}>
-                <header style={styles.header}>
+            {/* Remplacement de style={styles.mainContent} par className="main-content" */}
+            <div className="main-content">
+                {/* Remplacement de style={styles.header} par className="header" */}
+                <header className="header">
                     <h1>Panneau d'Administration</h1>
-                    <button onClick={onLogout} style={styles.logoutButton}>
+                    {/* Remplacement de style={styles.logoutButton} par className="logout-button" */}
+                    <button onClick={onLogout} className="logout-button">
                         Déconnexion
                     </button>
                 </header>
                 
                 {/* Rendu de la vue sélectionnée */}
-                {renderView()}
+                <div className="view-content">
+                    {renderView()}
+                </div>
             </div>
         </div>
     );
 }
 
-const styles = {
-    dashboardContainer: {
-        display: 'flex',
-    },
-    mainContent: {
-        marginLeft: '250px', // Correspond à la largeur de la Sidebar
-        padding: '20px',
-        width: 'calc(100% - 250px)',
-    },
-    header: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '30px',
-        borderBottom: '1px solid #ddd',
-        paddingBottom: '15px'
-    },
-    logoutButton: {
-        padding: '8px 15px',
-        backgroundColor: '#dc3545',
-        color: 'white',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer',
-    }
-};
+
 
 export default AdminDashboard;

@@ -1,0 +1,110 @@
+/* ======================================= */
+/* Styles Généraux et Conteneur Principal */
+/* ======================================= */
+
+body {
+    /* Utilisation des styles de l'image : thème sombre */
+    background-color: #1a1a1a; /* Fond très foncé */
+    color: #e0e0e0; /* Texte clair par défaut */
+    font-family: 'Inter', sans-serif; /* Police moderne et lisible */
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ======================================= */
+/* Contenu Principal (Main Content) */
+/* ======================================= */
+
+/* Dans AdminDashboard.css */
+.main-content {
+    /* Marge gauche pour laisser de la place à la Sidebar (250px) */
+    margin-left: 250px; 
+    /* Le padding en haut doit être suffisant pour que le contenu ne passe pas sous le header fixe */
+    padding: 90px 30px 20px 30px; /* Augmentation du padding-top (ex: 90px) */
+    width: calc(100% - 250px); /* Calcule la largeur restante */
+    min-height: 100vh;
+    box-sizing: border-box; 
+}
+
+/* ======================================= */
+/* En-tête (Header) */
+/* ======================================= */
+
+.header {
+    /* 🛠️ RÈGLES CRITIQUES POUR FIXER LE HEADER */
+    position: fixed; /* Rend la barre fixe au défilement */
+    top: 0;
+    /* Début après la sidebar de 250px */
+    left: 250px; 
+    /* Étend le header jusqu'au bord droit */
+    width: calc(100% - 250px); 
+    
+    /* Styles de présentation */
+    background-color: #1a1a1a; /* Même fond que le body pour la cohérence */
+    z-index: 99; /* Moins que la Sidebar (100) mais au-dessus du contenu */
+
+    /* Alignement et Espacement */
+    display: flex;
+    justify-content: space-between; /* Pousse le bouton à droite */
+    align-items: center;
+    padding: 20px 30px; /* Padding de la navbar (haut/bas et gauche/droite) */
+    
+    /* Suppression des marges et des lignes de séparation d'origine */
+    margin-bottom: 0; 
+    border-bottom: 1px solid #333; 
+    
+    /* Ombre subtile pour le faire ressortir */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.header h1 {
+    font-size: 1.5em; /* Taille légèrement réduite pour une navbar */
+    color: #ffffff;
+    margin: 0;
+}
+
+/* ======================================= */
+/* Bouton de Déconnexion (Logout Button) */
+/* ======================================= */
+
+.logout-button {
+    /* Le style est généralement bien, on peut affiner l'apparence */
+    padding: 10px 18px; 
+    background-color: #dc3545; 
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    text-transform: uppercase;
+    margin-right: 70px;
+}
+
+.logout-button:hover {
+    background-color: #c82333; 
+}
+
+/* ======================================= */
+/* Styles de Vue (pour les composants imbriqués) */
+/* ======================================= */
+
+/* Ceci est un style générique. Les composants comme AllUsers
+   doivent avoir leurs propres styles, comme pour le tableau
+   vu dans la première réponse. */
+.view-content {
+    background-color: #242424; /* Un fond pour la zone de contenu */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.view-content h2 {
+    color: #007bff; /* Bleu clair pour le titre de la vue */
+    margin-top: 0;
+}

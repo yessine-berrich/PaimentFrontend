@@ -1,0 +1,132 @@
+/* ======================================= */
+/* Styles de base du conteneur (pour la vue Profile) */
+/* ======================================= */
+
+/* La classe .view-content est définie dans AdminDashboard.css,
+   mais on peut y ajouter des spécificités si besoin.
+   Ici, nous stylisons les éléments à l'intérieur. */
+
+.view-content h2 {
+    color: #ffffff;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #007bff; /* Soulignement bleu pour le titre de la vue */
+    margin-bottom: 25px;
+}
+
+/* Messages de succès et d'erreur */
+.view-content .success-message {
+    color: #28a745; /* Vert pour le succès */
+    background-color: #1f301f;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.view-content .error-message {
+    color: #dc3545; /* Rouge pour l'erreur */
+    background-color: #301f1f;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+
+/* ======================================= */
+/* Formulaire et Groupes de Champs */
+/* ======================================= */
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Espacement entre les groupes de champs */
+    width: 600px; /* Limite la largeur du formulaire */
+    padding: 30px;
+    background-color: #242424; /* Fond légèrement plus clair que le body */
+    border: 1px solid #3A3A3A; /* Bordure subtile */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-form label {
+    font-weight: 500;
+    color: #CCCCCC; /* Texte du label */
+    margin-bottom: 5px;
+    font-size: 0.95em;
+}
+
+.profile-form h3 {
+    color: #007bff; /* Titre de section bleu */
+    border-bottom: 1px dotted #3A3A3A;
+    padding-bottom: 5px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.profile-form p {
+    color: #999999; /* Paragraphe d'information */
+}
+
+/* ======================================= */
+/* Champs d'entrée (Inputs) */
+/* ======================================= */
+
+.form-input {
+    padding: 12px;
+    margin-top: 5px;
+    border: 1px solid #444444; /* Bordure sombre */
+    border-radius: 6px;
+    background-color: #333333; /* Fond sombre pour le champ */
+    color: #E0E0E0; /* Texte clair dans le champ */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+    border-color: #007bff; /* Bordure bleue au focus */
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* Champs désactivés (Lecture seule : Nom, Prénom) */
+.input-disabled {
+    padding: 12px;
+    margin-top: 5px;
+    border: 1px solid #444444;
+    border-radius: 6px;
+    background-color: #3A3A3A; /* Gris plus foncé pour indiquer désactivé */
+    color: #999999; /* Texte plus pâle */
+    cursor: not-allowed;
+}
+
+/* ======================================= */
+/* Bouton de Soumission */
+/* ======================================= */
+
+.submit-button {
+    padding: 12px;
+    background-color: #007bff; /* Bleu primaire */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 25px;
+    font-weight: bold;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.submit-button:hover:not(:disabled) {
+    background-color: #0056b3; /* Bleu plus foncé au survol */
+}
+
+.submit-button:disabled {
+    background-color: #6c757d; /* Gris si désactivé (loading) */
+    cursor: wait;
+    opacity: 0.7;
+}

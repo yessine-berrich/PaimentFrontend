@@ -1,13 +1,21 @@
 import React from 'react';
 import SessionManagement from './SessionManagement'; // Importer la nouvelle page
+import './ComptableDashboard.css'; 
 
-function ComptableDashboard({ user, onLogout }) {
+function ComptableDashboard({  onLogout }) {
     return (
-        <div style={{ padding: '20px' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ddd', paddingBottom: '15px', marginBottom: '30px' }}>
-                <h1>Espace Comptable 💰</h1>
-                <p>Bienvenue, {user.nom} ({user.role})</p>
-                <button onClick={onLogout} style={{ padding: '8px 15px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Déconnexion</button>
+          <div className="comptable-dashboard">
+            
+            {/* Utilisation de la classe CSS pour l'en-tête */}
+            <header className="dashboard-header">
+                <h1>Espace Comptable </h1>
+                
+               
+                
+                {/* Utilisation de la classe CSS pour le bouton de déconnexion */}
+                <button onClick={onLogout} className="logout-button">
+                    Déconnexion
+                </button>
             </header>
             
             {/* Afficher la page de gestion des sessions */}

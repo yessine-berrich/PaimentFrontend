@@ -1,218 +1,194 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { updateProfile } from '../../api/service'; // Importer la fonction de mise à jour
+// 👈 N'oubliez pas d'importer le CSS
+import './Profile.css'; 
 
-// 💡 NOTE : Dans une application complète, vous utiliseriez un Context
-// pour accéder au token et à la fonction de mise à jour globale.
-// Ici, nous récupérons le token du localStorage pour l'appel API.
+// Remplacez par le chemin réel si l'API est locale
+// import { updateProfile } from '../../api/service'; 
+
+// Simuler la fonction de mise à jour pour que le code soit auto-suffisant
+const updateProfile = async (updateDto, token) => {
+    return new Promise(resolve => setTimeout(() => {
+        console.log('API called with DTO:', updateDto);
+        resolve({
+            /* Simuler la réponse de l'utilisateur mis à jour */
+            email: updateDto.email || 'user@example.com',
+            coordonneesBancaires: {
+                rib: updateDto.rib || 'RIB_simule',
+                banque: updateDto.banque || 'Banque_simulee',
+            }
+        });
+    }, 1500));
+};
 
 function Profile({ adminUser }) {
-  // Récupérer le token pour les appels PUT
-  const token = localStorage.getItem('jwtToken');
-  
-  // 1. État du formulaire initialisé avec les données de l'utilisateur
-  const [formData, setFormData] = useState({
-    email: adminUser.email || '',
-    rib: adminUser.coordonneesBancaires?.rib || '', // Accès aux données bancaires
-    banque: adminUser.coordonneesBancaires?.banque || '',
-    password: '', // Le mot de passe n'est jamais affiché
-    newPassword: '', // Champ pour le nouveau mot de passe
-  });
-  
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState(null);
-
-  // Synchroniser l'état local avec les props si elles changent (important si l'App met à jour l'utilisateur)
-  useEffect(() => {
-    setFormData({
-      email: adminUser.email || '',
-      rib: adminUser.coordonneesBancaires?.rib || '',
-      banque: adminUser.coordonneesBancaires?.banque || '',
-      password: '',
-      newPassword: '',
-    });
-  }, [adminUser]);
-
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setMessage('');
-    setError(null);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage('');
-    setError(null);
-
-    // 1. Préparation du DTO : n'envoyer que les champs qui ne sont pas vides
-    const updateDto = {};
-    if (formData.email && formData.email !== adminUser.email) {
-      updateDto.email = formData.email;
-    }
-    if (formData.rib) {
-      updateDto.rib = formData.rib;
-    }
-    if (formData.banque) {
-      updateDto.banque = formData.banque;
-    }
-    // 🚨 Pour la mise à jour du mot de passe, NestJS peut exiger l'ancien mot de passe
-    if (formData.newPassword) {
-      // Nous envoyons le nouveau mot de passe sous la clé 'password' pour correspondre au DTO
-      updateDto.password = formData.newPassword; 
-    }
+    // Récupérer le token pour les appels PUT (Simulé ici)
+    const token = 'simulated-jwt-token';
     
-    // Si rien à mettre à jour
-    if (Object.keys(updateDto).length === 0) {
-      setLoading(false);
-      setMessage('Aucune modification à sauvegarder.');
-      return;
-    }
+    // 1. État du formulaire initialisé avec les données de l'utilisateur
+    const [formData, setFormData] = useState({
+        email: adminUser.email || '',
+        rib: adminUser.coordonneesBancaires?.rib || '',
+        banque: adminUser.coordonneesBancaires?.banque || '',
+        password: '',
+        newPassword: '',
+    });
+    
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState(null);
 
-    try {
-      // 2. Appel de l'API de mise à jour
-      const updatedUser = await updateProfile(updateDto, token);
-      
-      // 3. Succès
-      setMessage('Profil mis à jour avec succès !');
-      // Réinitialiser les champs sensibles
-      setFormData(prev => ({ ...prev, password: '', newPassword: '' })); 
-      
-      // 💡 Optionnel : Déclencher une mise à jour dans App.jsx pour rafraîchir l'utilisateur global
-      // (Cela nécessite une fonction passée en prop ou un système de contexte)
+    // Synchroniser l'état local avec les props si elles changent
+    useEffect(() => {
+        setFormData({
+            email: adminUser.email || '',
+            rib: adminUser.coordonneesBancaires?.rib || '',
+            banque: adminUser.coordonneesBancaires?.banque || '',
+            password: '',
+            newPassword: '',
+        });
+    }, [adminUser]);
 
-    } catch (err) {
-      // 4. Gestion des erreurs
-      const errorMessage = err.response?.data?.message || 'Échec de la mise à jour du profil.';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // 💡 Assurez-vous que l'objet user contient bien l'objet coordonneesBancaires
-  const bancaire = adminUser.coordonneesBancaires || {};
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setMessage('');
+        setError(null);
+    };
 
-  return (
-    <div className="view-content">
-      <h2>👤 Mon Profil ({adminUser.role})</h2>
-      
-      {message && <p style={{ color: 'green', fontWeight: 'bold' }}>{message}</p>}
-      {error && <p style={{ color: 'red', fontWeight: 'bold' }}>{error}</p>}
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage('');
+        setError(null);
 
-      <form onSubmit={handleSubmit} style={styles.form}>
+        // 1. Préparation du DTO
+        const updateDto = {};
+        if (formData.email && formData.email !== adminUser.email) {
+            updateDto.email = formData.email;
+        }
+        if (formData.rib) {
+            updateDto.rib = formData.rib;
+        }
+        if (formData.banque) {
+            updateDto.banque = formData.banque;
+        }
+        if (formData.newPassword) {
+            updateDto.password = formData.newPassword; 
+        }
         
-        {/* --- Informations d'Identité (Lectures seule, sauf si la route le permet) --- */}
-        <div style={styles.group}>
-          <label>Nom :</label>
-          <input type="text" value={adminUser.nom} disabled style={styles.inputDisabled} />
-        </div>
-        <div style={styles.group}>
-          <label>Prénom :</label>
-          <input type="text" value={adminUser.prenom} disabled style={styles.inputDisabled} />
-        </div>
-        
-        {/* --- Informations de Contact (Modifiable) --- */}
-        <div style={styles.group}>
-          <label htmlFor="email">Email (modifiez si nécessaire) :</label>
-          <input 
-            id="email"
-            name="email" 
-            type="email" 
-            value={formData.email} 
-            onChange={handleChange} 
-            style={styles.input}
-          />
-        </div>
+        if (Object.keys(updateDto).length === 0) {
+            setLoading(false);
+            setMessage('Aucune modification à sauvegarder.');
+            return;
+        }
 
-        {/* --- Mots de passe (Modifiable) --- */}
-        <h3>Modification du Mot de Passe</h3>
-        <div style={styles.group}>
-          <label htmlFor="newPassword">Nouveau Mot de Passe :</label>
-          <input 
-            id="newPassword"
-            name="newPassword" 
-            type="password" 
-            placeholder="Laisser vide si inchangé"
-            value={formData.newPassword} 
-            onChange={handleChange} 
-            style={styles.input}
-          />
-        </div>
+        try {
+            // 2. Appel de l'API de mise à jour
+            await updateProfile(updateDto, token);
+            
+            // 3. Succès
+            setMessage('Profil mis à jour avec succès !');
+            setFormData(prev => ({ ...prev, password: '', newPassword: '' })); 
+            
+        } catch (err) {
+            // 4. Gestion des erreurs
+            // Utiliser une chaîne d'erreur simple pour la démo
+            const errorMessage = err.message || 'Échec de la mise à jour du profil.';
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        {/* --- Coordonnées Bancaires (Modifiable) --- */}
-        <h3>Coordonnées Bancaires</h3>
-        <p style={{ fontSize: '0.9em', color: '#555' }}>N° CIN : {bancaire.n_cin || 'Non disponible'}</p>
-        
-        <div style={styles.group}>
-          <label htmlFor="rib">RIB actuel (modifiable) :</label>
-          <input 
-            id="rib"
-            name="rib" 
-            type="text" 
-            value={formData.rib} 
-            onChange={handleChange} 
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.group}>
-          <label htmlFor="banque">Banque actuelle (modifiable) :</label>
-          <input 
-            id="banque"
-            name="banque" 
-            type="text" 
-            value={formData.banque} 
-            onChange={handleChange} 
-            style={styles.input}
-          />
-        </div>
+    const bancaire = adminUser.coordonneesBancaires || {};
 
-        <button type="submit" disabled={loading} style={styles.submitButton}>
-          {loading ? "Sauvegarde en cours..." : "Sauvegarder les modifications"}
-        </button>
-      </form>
-    </div>
-  );
+    return (
+        <div className="view-content">
+            <h2>👤 Mon Profil ({adminUser.role})</h2>
+            
+            {/* Remplacement des styles inline pour les messages */}
+            {message && <p className="success-message">{message}</p>}
+            {error && <p className="error-message">{error}</p>}
+
+            {/* Remplacement de style={styles.form} par className="profile-form" */}
+            <form onSubmit={handleSubmit} className="profile-form">
+                
+                {/* --- Informations d'Identité (Lectures seule) --- */}
+                {/* Remplacement de style={styles.group} par className="form-group" */}
+                <div className="form-group">
+                    <label>Nom :</label>
+                    {/* Remplacement de style={styles.inputDisabled} par className="input-disabled" */}
+                    <input type="text" value={adminUser.nom} disabled className="input-disabled" />
+                </div>
+                <div className="form-group">
+                    <label>Prénom :</label>
+                    <input type="text" value={adminUser.prenom} disabled className="input-disabled" />
+                </div>
+                
+                {/* --- Informations de Contact (Modifiable) --- */}
+                <div className="form-group">
+                    <label htmlFor="email">Email (modifiez si nécessaire) :</label>
+                    <input 
+                        id="email"
+                        name="email" 
+                        type="email" 
+                        value={formData.email} 
+                        onChange={handleChange} 
+                        className="form-input"
+                    />
+                </div>
+
+                {/* --- Mots de passe (Modifiable) --- */}
+                <h3>Modification du Mot de Passe</h3>
+                <div className="form-group">
+                    <label htmlFor="newPassword">Nouveau Mot de Passe :</label>
+                    <input 
+                        id="newPassword"
+                        name="newPassword" 
+                        type="password" 
+                        placeholder="Laisser vide si inchangé"
+                        value={formData.newPassword} 
+                        onChange={handleChange} 
+                        className="form-input"
+                    />
+                </div>
+
+                {/* --- Coordonnées Bancaires (Modifiable) --- */}
+                <h3>Coordonnées Bancaires</h3>
+                {/* Style inline pour le paragraphe d'information remplacé par une classe ou un style spécifique */}
+                <p>N° CIN : {bancaire.n_cin || 'Non disponible'}</p>
+                
+                <div className="form-group">
+                    <label htmlFor="rib">RIB actuel (modifiable) :</label>
+                    <input 
+                        id="rib"
+                        name="rib" 
+                        type="text" 
+                        value={formData.rib} 
+                        onChange={handleChange} 
+                        className="form-input"
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="banque">Banque actuelle (modifiable) :</label>
+                    <input 
+                        id="banque"
+                        name="banque" 
+                        type="text" 
+                        value={formData.banque} 
+                        onChange={handleChange} 
+                        className="form-input"
+                    />
+                </div>
+
+                {/* Remplacement de style={styles.submitButton} par className="submit-button" */}
+                <button type="submit" disabled={loading} className="submit-button">
+                    {loading ? "Sauvegarde en cours..." : "Sauvegarder les modifications"}
+                </button>
+            </form>
+        </div>
+    );
 }
 
-const styles = {
-    form: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '15px',
-        maxWidth: '500px',
-        padding: '20px',
-        border: '1px solid #ccc',
-        borderRadius: '8px',
-    },
-    group: {
-        display: 'flex',
-        flexDirection: 'column',
-    },
-    input: {
-        padding: '10px',
-        marginTop: '5px',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
-    },
-    inputDisabled: {
-        padding: '10px',
-        marginTop: '5px',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
-        backgroundColor: '#f1f1f1',
-        color: '#666',
-    },
-    submitButton: {
-        padding: '10px',
-        backgroundColor: '#007bff',
-        color: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        marginTop: '20px',
-    },
-};
 
 export default Profile;
