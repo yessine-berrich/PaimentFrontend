@@ -1,0 +1,103 @@
+/* src/components/formateur/FormateurDashboard.css */
+
+/* Mise en page principale avec header fixe et zone de contenu */
+.formateur-dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f0f2f5; 
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #28a745; /* 🚨 Couleur Verte pour le Formateur */
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky; 
+    top: 0;
+    z-index: 1000;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.logout-button {
+    background-color: #dc3545; 
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #c82333;
+}
+
+/* Zone pour la Sidebar et le contenu de la vue */
+.main-content-area {
+    display: flex;
+    flex: 1; 
+    overflow: hidden; 
+}
+
+/* Style pour la barre latérale */
+.dashboard-sidebar {
+    width: 250px;
+    background-color: #ffffff; 
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+}
+
+.dashboard-sidebar h3 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #28a745; /* Soulignement assorti au header */
+    padding-bottom: 10px;
+}
+
+.dashboard-sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.dashboard-sidebar li {
+    margin-bottom: 8px;
+}
+
+.dashboard-sidebar button {
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.dashboard-sidebar li.active button {
+    background-color: #28a745; /* Vert actif */
+    color: white;
+    font-weight: bold;
+}
+
+.dashboard-sidebar button:hover:not(.active button) {
+    background-color: #e6f7eb; /* Vert très clair au survol */
+}
+
+/* Zone de contenu de la vue */
+.view-container {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto; 
+}
