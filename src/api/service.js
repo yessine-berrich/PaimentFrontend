@@ -1,9 +1,12 @@
 import axios from "axios";
 
+// Configuration de base
 const API_URL = "/api";
-const USERS_AUTH_PREFIX = `${API_URL}/users/auth`; // Pour la connexion
-const USERS_PREFIX = `${API_URL}/users`; // Pour l'utilisateur courant
-const SESSIONS_PREFIX = `${API_URL}/sessions`; // Pour les sessions
+const USERS_AUTH_PREFIX = `${API_URL}/users/auth`; // Pour la connexion et l'inscription
+const USERS_PREFIX = `${API_URL}/users`; // Pour la gestion des utilisateurs
+const SESSIONS_PREFIX = `${API_URL}/sessions`; // Pour la gestion des sessions
+
+// --- Fonctions d'Authentification et Utilisateur ---
 
 /**
  * Envoie les identifiants (POST /api/users/auth/login)
@@ -16,6 +19,7 @@ export const login = async (email, password) => {
         password,
     });
     
+    // Si l'API retourne un statut 2xx mais contient un champ d'erreur explicite
     if (response.data.success === false) {
         throw new Error(response.data.message);
     }
@@ -52,13 +56,11 @@ export const register = async (registerDto) => {
  */
 export const updateProfile = async (updateDto, token) => {
     const FULL_UPDATE_PATH = `${USERS_PREFIX}/me`; 
-    // Axios rejette automatiquement si le backend retourne un statut d'erreur (4xx/5xx)
     const response = await axios.put(FULL_UPDATE_PATH, updateDto, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
     });
-    // Le backend doit retourner l'objet User mis à jour.
     return response.data; 
 };
 
@@ -98,8 +100,10 @@ export const deleteUser = async (userId, token) => {
 
 /**
  * Récupère TOUS les utilisateurs, puis filtre par rôle spécifié.
+ * (Note: C'est un filtre côté client, idéalement ce serait côté serveur)
  */
 export const getUsersByRole = async (role, token) => {
+    // Note: Utilise la fonction locale pour éviter des appels multiples si déjà mise en cache
     const allUsers = await getAllUsers(token); 
     const filteredUsers = allUsers.filter(user => user.role === role);
     return filteredUsers;
@@ -147,3 +151,25 @@ export const deleteSession = async (sessionId, token) => {
         headers: { Authorization: `Bearer ${token}` },
     });
 };
+
+// --- Fonction pour l'Affectation des Formateurs ---
+
+/**
+ * Affecte des formateurs à une session.
+ * POST /api/sessions/:id/affecter-formateurs
+ * @param {number} sessionId - L'ID de la session à modifier.
+ * @param {number[]} trainerIds - Le tableau d'IDs des formateurs à affecter.
+ * @param {string} token - Le jeton d'authentification.
+ */
+export const assignTrainersToSession = async (sessionId, trainerIds, token) => {
+    const FULL_PATH = `${SESSIONS_PREFIX}/${sessionId}/affecter-formateurs`; 
+    
+    // 🚨 CORRECTION MAJEURE: 
+    // Changement de 'trainerIds' à 'formateurIds' pour correspondre à la validation du backend.
+    const response = await axios.post(FULL_PATH, { formateurIds: trainerIds }, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+};
+
+// 🚨 NE PAS AJOUTER D'EXPORTATION DE COMPOSANT ICI, C'EST UN FICHIER D'API PURE

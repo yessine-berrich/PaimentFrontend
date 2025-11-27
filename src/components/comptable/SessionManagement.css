@@ -267,4 +267,79 @@
         width: 100%;
         min-width: auto;
     }
+
+
+    /* --- Modal d'Affectation Spécifique --- */
+
+/* Assurez-vous d'avoir les styles de base modal-overlay et modal-content */
+
+.assignment-modal {
+    max-width: 600px; /* Plus large pour la liste */
+}
+
+.assignment-body {
+    padding: 15px 0;
+}
+
+.trainer-list-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.trainer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.trainer-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border: 1px solid transparent;
+}
+
+.trainer-item:hover {
+    background-color: #f0f0f0;
+}
+
+.trainer-item.selected {
+    background-color: #e6f7ff; /* Couleur de sélection */
+    border-color: #91d5ff;
+}
+
+.trainer-name {
+    font-weight: bold;
+    margin-left: 10px;
+    flex-grow: 1;
+}
+
+.trainer-email {
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* --- Boutons d'Action dans le Tableau --- */
+
+.assign-button {
+    background-color: #ffc107; /* Jaune/Orange pour l'affectation */
+    color: #333;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    margin-right: 5px;
+    transition: background-color 0.2s;
+}
+
+.assign-button:hover:not(:disabled) {
+    background-color: #e0a800;
+}
 }

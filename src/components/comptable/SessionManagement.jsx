@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import './SessionManagement.css'; // <-- Utilisation d'un fichier CSS pour le style
+import './SessionManagement.css'; 
 import { 
     getUsersByRole, 
     createSession, 
     getAllSessions,
     updateSession, 
-    deleteSession  
+    deleteSession,
+    assignTrainersToSession 
 } from '../../api/service'; 
+import { userRole } from '../../utils/constants'; 
 
 const initialSessionData = {
     promotion: '',
     classe: '',
     specialite: '',
     niveau: 'Licence', 
-    semestre: 'S5',    
+    semestre: 'S5', 
     date_debut: '',
     date_fin: '',
     id_coordinateur: '',
@@ -23,11 +25,18 @@ function SessionManagement() {
     const token = localStorage.getItem('jwtToken');
 
     const [coordinators, setCoordinators] = useState([]);
+    const [allTrainers, setAllTrainers] = useState([]); 
     const [sessions, setSessions] = useState([]);
     
     const [formData, setFormData] = useState(initialSessionData); 
     const [editingId, setEditingId] = useState(null); 
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false); 
+
+    // États pour l'affectation
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false); 
+    const [sessionToAssign, setSessionToAssign] = useState(null); 
+    const [selectedTrainerIds, setSelectedTrainerIds] = useState([]); 
+    // const [currentAssignedIds, setCurrentAssignedIds] = useState([]); // Non utilisé, mais peut être utile pour le debug
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -39,6 +48,7 @@ function SessionManagement() {
         setLoading(true);
         setError(null);
         try {
+            // Assurez-vous que l'API retourne la relation `sessionFormateurs`
             const data = await getAllSessions(token);
             setSessions(data);
         } catch (err) {
@@ -48,28 +58,35 @@ function SessionManagement() {
         }
     }, [token]);
     
-    const fetchCoordinators = useCallback(async () => {
+    const fetchUsers = useCallback(async () => {
         try {
-            const data = await getUsersByRole('COORDINATEUR', token);
-            setCoordinators(data);
-            if (data.length > 0 && formData.id_coordinateur === '') {
-                // S'assurer qu'un coordinateur est sélectionné par défaut à l'initialisation
-                setFormData(prev => ({ ...prev, id_coordinateur: data[0].id.toString() }));
+            // 1. Récupérer les coordinateurs
+            const coordData = await getUsersByRole(userRole.COORDINATEUR, token);
+            setCoordinators(coordData);
+            
+            // Initialiser le coordinateur par défaut si possible
+            if (coordData.length > 0 && formData.id_coordinateur === '') {
+                setFormData(prev => ({ ...prev, id_coordinateur: coordData[0].id.toString() }));
             }
+            
+            // 2. Récupérer tous les formateurs
+            const trainerData = await getUsersByRole(userRole.FORMATEUR, token);
+            setAllTrainers(trainerData);
+
         } catch (err) {
-            setError("Impossible de charger la liste des Coordinateurs.");
+            setError(prev => prev || "Impossible de charger la liste des utilisateurs (Coordinateurs/Formateurs).");
         }
     }, [token, formData.id_coordinateur]);
 
 
     useEffect(() => {
         if (token) {
-            fetchCoordinators();
+            fetchUsers();
             fetchSessions();
         }
-    }, [token, fetchCoordinators, fetchSessions]); 
+    }, [token, fetchUsers, fetchSessions]); 
 
-    // --- Gestion du Formulaire ---
+    // --- Gestion du Formulaire (Création/Modification) ---
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -80,9 +97,7 @@ function SessionManagement() {
 
     const handleOpenModal = (session = null) => {
         if (session) {
-            // Stocker l'ID de la session à éditer (qui peut être un nombre ou une chaîne)
             setEditingId(session.id);
-            // Charger les données de la session sélectionnée dans le formulaire
             setFormData({
                 promotion: session.promotion || '',
                 classe: session.classe || '',
@@ -91,16 +106,16 @@ function SessionManagement() {
                 semestre: session.semestre || 'S5',
                 date_debut: session.date_debut ? session.date_debut.split('T')[0] : '', 
                 date_fin: session.date_fin ? session.date_fin.split('T')[0] : '',
-                // L'ID du coordinateur doit être une chaîne pour le champ select
                 id_coordinateur: session.id_coordinateur ? session.id_coordinateur.toString() : (coordinators[0]?.id.toString() || ''), 
             });
             setMessage(`Modification de la session ID ${session.id}`);
         } else {
             setEditingId(null);
-            setFormData(initialSessionData);
+            let defaultData = initialSessionData;
             if (coordinators.length > 0) {
-                 setFormData(prev => ({ ...prev, id_coordinateur: coordinators[0].id.toString() }));
+                defaultData = { ...defaultData, id_coordinateur: coordinators[0].id.toString() };
             }
+            setFormData(defaultData);
             setMessage("Création d'une nouvelle session.");
         }
         setError(null);
@@ -110,10 +125,11 @@ function SessionManagement() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingId(null);
-        setFormData(initialSessionData);
+        let defaultData = initialSessionData;
         if (coordinators.length > 0) {
-            setFormData(prev => ({ ...prev, id_coordinateur: coordinators[0].id.toString() }));
+            defaultData = { ...defaultData, id_coordinateur: coordinators[0].id.toString() };
         }
+        setFormData(defaultData);
         setMessage(null);
         setError(null);
     };
@@ -124,7 +140,6 @@ function SessionManagement() {
         setMessage(null);
         setError(null);
         
-        // Validation basique
         if (new Date(formData.date_debut) >= new Date(formData.date_fin)) {
             setError("La date de début doit être antérieure à la date de fin.");
             setLoading(false);
@@ -134,26 +149,23 @@ function SessionManagement() {
         try {
             let dataToSend = {
                 ...formData,
-                // Le coordinateur doit être un nombre
                 id_coordinateur: parseInt(formData.id_coordinateur, 10),
             };
             
             if (editingId) {
+                // Filtrer les champs vides pour n'envoyer que ce qui est modifié (PATCH)
                 dataToSend = Object.entries(dataToSend).reduce((acc, [key, value]) => {
-                    // N'inclure que les valeurs qui ne sont pas des chaînes vides
                     if (value !== '' && value !== null && value !== undefined) {
                         acc[key] = value;
                     }
                     return acc;
                 }, {});
                 
-                // CORRECTION: S'assurer que l'ID pour la modification est un nombre
                 const idToUpdate = parseInt(editingId, 10); 
                 
                 await updateSession(idToUpdate, dataToSend, token);
                 setMessage("Session modifiée avec succès !");
             } else {
-                // CRÉATION (POST)
                 await createSession(dataToSend, token);
                 setMessage("Session créée avec succès !");
             }
@@ -180,7 +192,6 @@ function SessionManagement() {
         setError(null);
         
         try {
-            // CORRECTION: Convertir sessionId en nombre entier pour l'API
             const idToDelete = parseInt(sessionId, 10);
             
             await deleteSession(idToDelete, token); 
@@ -194,6 +205,69 @@ function SessionManagement() {
         }
     };
 
+    // --- Gestion de l'Affectation des Formateurs ---
+
+    const handleOpenAssignModal = (session) => {
+        setSessionToAssign(session);
+        
+        // Récupérer les IDs des formateurs déjà affectés à cette session
+        const assignedIds = (session.sessionFormateurs || []).map(sf => sf.id_formateur);
+        // setCurrentAssignedIds(assignedIds); // Vous pouvez le laisser en commentaire
+        setSelectedTrainerIds(assignedIds); // Initialiser l'état de sélection avec les formateurs déjà affectés
+        
+        setIsAssignModalOpen(true);
+        setError(null);
+        setMessage(null);
+    };
+
+    const handleCloseAssignModal = () => {
+        setIsAssignModalOpen(false);
+        setSessionToAssign(null);
+        setSelectedTrainerIds([]);
+        // setCurrentAssignedIds([]);
+        setError(null);
+    };
+    
+    const handleTrainerSelection = (trainerId) => {
+        const idNum = parseInt(trainerId, 10);
+        // Logique de bascule (toggle)
+        setSelectedTrainerIds(prevIds => 
+            prevIds.includes(idNum)
+                ? prevIds.filter(id => id !== idNum) // Désélectionner
+                : [...prevIds, idNum] // Sélectionner
+        );
+        setError(null);
+    };
+
+    const handleAssignSubmit = async () => {
+        if (!sessionToAssign) return;
+
+        setLoading(true);
+        setError(null);
+        setMessage(null);
+
+        const trainersToAssign = selectedTrainerIds; 
+
+        if (trainersToAssign.length === 0) {
+            setError("Veuillez sélectionner au moins un formateur.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            await assignTrainersToSession(sessionToAssign.id, trainersToAssign, token);
+            setMessage(`Affectation des formateurs à la session ${sessionToAssign.promotion} réussie !`);
+            
+            handleCloseAssignModal();
+            await fetchSessions(); 
+
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || "Échec de l'affectation des formateurs.";
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // --- Rendu ---
     
@@ -201,13 +275,19 @@ function SessionManagement() {
         return <p>⏳ Chargement des données de gestion des sessions...</p>;
     }
 
+    // Fonction d'aide pour afficher le nom du coordinateur
+    const getCoordinatorName = (id_coordinateur) => {
+        const coord = coordinators.find(c => c.id === id_coordinateur);
+        return coord ? `${coord.nom} ${coord.prenom}` : `ID: ${id_coordinateur}`;
+    };
+
     return (
         <div className="session-container">
             <h2>Gestion des Sessions 📅</h2>
             
             {/* Messages de feedback au niveau principal */}
             {message && <p className="feedback-message success-message">✅ {message}</p>}
-            {error && !isModalOpen && <p className="feedback-message error-message">🛑 {error}</p>}
+            {error && !isModalOpen && !isAssignModalOpen && <p className="feedback-message error-message">🛑 {error}</p>}
             
             <button 
                 onClick={() => handleOpenModal()} 
@@ -224,7 +304,6 @@ function SessionManagement() {
                     <div className="modal-content">
                         <h3>{editingId ? `Modification de l'ID ${editingId}` : 'Créer une nouvelle session'}</h3>
                         
-                        {/* Afficher l'erreur DANS le modal si elle existe */}
                         {error && <p className="feedback-message error-message">{error}</p>}
 
                         <form onSubmit={handleSubmit} className="modal-form">
@@ -320,6 +399,62 @@ function SessionManagement() {
                     </div>
                 </div>
             )}
+            
+            {/* --- Dialogue Modal pour AFFECTATION --- */}
+            {isAssignModalOpen && sessionToAssign && (
+                <div className="modal-overlay">
+                    <div className="modal-content assignment-modal">
+                        <h3>Affecter Formateurs à : {sessionToAssign.promotion}</h3>
+                        
+                        {error && <p className="feedback-message error-message">{error}</p>}
+                        
+                        <div className="assignment-body">
+                            {allTrainers.length === 0 ? (
+                                <p>Aucun formateur trouvé.</p>
+                            ) : (
+                                <div className="trainer-list-container">
+                                    <h4>Sélectionnez un ou plusieurs formateurs :</h4>
+                                    <div className="trainer-list">
+                                        {allTrainers.map(trainer => {
+                                            const isSelected = selectedTrainerIds.includes(trainer.id);
+                                            return (
+                                                // 🚨 CORRECTION : Le div parent gère le toggle pour une meilleure UX
+                                                <div 
+                                                    key={trainer.id} 
+                                                    className={`trainer-item ${isSelected ? 'selected' : ''}`}
+                                                    onClick={() => handleTrainerSelection(trainer.id)}
+                                                >
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={isSelected}
+                                                        // Empêche le double-toggle et laisse le div parent gérer l'état
+                                                        readOnly 
+                                                    />
+                                                    <span className="trainer-name">{trainer.nom} {trainer.prenom}</span>
+                                                    <span className="trainer-email">({trainer.email})</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="modal-buttons">
+                            <button type="button" onClick={handleCloseAssignModal} className="cancel-button">
+                                Annuler
+                            </button>
+                            <button 
+                                onClick={handleAssignSubmit} 
+                                disabled={loading || selectedTrainerIds.length === 0} 
+                                className="main-action-button"
+                            >
+                                {loading ? "Affectation en cours..." : `Affecter (${selectedTrainerIds.length}) Formateur(s)`}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* --- Liste des Sessions Existantes --- */}
             <h3>Sessions existantes ({sessions.length})</h3>
@@ -333,7 +468,7 @@ function SessionManagement() {
                             <th className="th">Classe/Spécialité</th>
                             <th className="th">Niveau/Semestre</th>
                             <th className="th">Période</th>
-                            <th className="th">Coordinateur ID</th>
+                            <th className="th">Coordinateur</th>
                             <th className="th">Actions</th>
                         </tr>
                     </thead>
@@ -345,8 +480,17 @@ function SessionManagement() {
                                 <td>{s.classe} ({s.specialite})</td>
                                 <td>{s.niveau} ({s.semestre})</td>
                                 <td>{s.date_debut.split('T')[0]} au {s.date_fin.split('T')[0]}</td>
-                                <td>{s.id_coordinateur}</td>
+                                <td>{getCoordinatorName(s.id_coordinateur)}</td>
                                 <td className="table-action-buttons">
+                                    
+                                    <button 
+                                        onClick={() => handleOpenAssignModal(s)}
+                                        className="assign-button" 
+                                        disabled={loading}
+                                    >
+                                        Affecter Formateurs ({s.sessionFormateurs?.length || 0})
+                                    </button>
+                                    
                                     <button 
                                         onClick={() => handleOpenModal(s)}
                                         className="edit-button"
